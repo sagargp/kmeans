@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt
 #  time.sleep(0.01)
 
 plt.figure()
+plt.ion()
+plt.show()
 
 k = 9 
 size = 1000
@@ -27,5 +29,11 @@ for x in range(0, int(k**.5)):
   for y in range(0, int(k**.5)):
     centroids.append((x, y))
 
-plt.scatter(zip(*centroids)[0], zip(*centroids)[1])
-plt.show()
+plt.scatter(zip(*centroids)[0], zip(*centroids)[1], c="b")
+plt.draw()
+
+points = [(random.randint(0, 1000), random.randint(0, 1000)) for x in range(1, 1000)]
+
+plt.scatter(zip(*points)[0], zip(*points)[1], c="r")
+plt.draw()
+time.sleep(5)
