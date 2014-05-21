@@ -1,39 +1,68 @@
+import numpy
 import time
 import random
 import matplotlib.pyplot as plt
 
-#plt.figure()
-#plt.ion()
-#plt.show()
-#
-#colors = ['r']*500 + ['b']*500
-#while 1:
-#  xvals = [random.randint(0, 1000) for k in range(0, 1000)]
-#  yvals = [random.randint(0, 1000) for k in range(0, 1000)]
-#
-#  plt.clf()
-#  plt.scatter(xvals[0:500],    yvals[0:500],    c=colors[0:500], marker='o')
-#  plt.scatter(xvals[500:1000], yvals[500:1000], c=colors[500:1000], marker='s')
-#  plt.draw()
-#  time.sleep(0.01)
+def distance(p1, p2):
+  return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
 
-plt.figure()
-plt.ion()
-plt.show()
+class Cluster(object):
+  def __init__(self, center):
+    self.center = center
 
-k = 9 
-size = 1000
-centroids = []
+  def update(self, points):
+    new_center = points[0]
+    for x, y in points[1:]:
+      new_center = (new_center[0]+x, new_center[1]+y)
+    new_center = (new_center[0]/len(points), new_center[1]/len(points))
+    moved = distance(new_center, self.center)
+    self.center = new_center
+    return moved
 
-for x in range(0, int(k**.5)):
-  for y in range(0, int(k**.5)):
-    centroids.append((x, y))
+def kmeans(points, k):
+  # initialize k clusters as random points
+  clusters = [Cluster(c) for c in random.sample(points, k)]
 
-plt.scatter(zip(*centroids)[0], zip(*centroids)[1], c="b")
-plt.draw()
+  while True:
+    # keep track of new points for each cluster
+    new_cluster_points = [[] for _ in range(k)]
 
-points = [(random.randint(0, 1000), random.randint(0, 1000)) for x in range(1, 1000)]
+    # assign each point to the nearest cluster
+    for p in points:
+      closest_cluster = min(enumerate([distance(p, c.center) for c in clusters]), key=lambda x:x[1])[0]
+      new_cluster_points[closest_cluster].append(p)
 
-plt.scatter(zip(*points)[0], zip(*points)[1], c="r")
-plt.draw()
-time.sleep(5)
+    yield clusters
+
+    cluster_moves = [1]*k
+    for i, cluster in enumerate(clusters):
+      cluster_moves[i] = cluster.update(new_cluster_points[i])
+
+    if all([m == 0.0 for m in cluster_moves]):
+      break
+
+if __name__ == "__main__":
+  k = 5
+  plt.figure()
+  plt.ion()
+  plt.show()
+
+  while True:
+    points = []
+    for num_clusters in range(random.randint(3, 8)):
+      p = numpy.random.normal(random.randint(1, 10), random.random()*0.5, (100, 2))
+      points.append(p)
+    points = numpy.concatenate(points)
+
+    for clusters in kmeans(points, k):
+      plt.clf()
+
+      x_coords, y_coords = zip(*points)
+      plt.scatter(x_coords, y_coords, c="b", s=1)
+
+      cluster_centers = [c.center for c in clusters]
+      c_x_coords, c_y_coords = zip(*cluster_centers)
+      plt.scatter(c_x_coords, c_y_coords, c="r", s=100)
+      plt.draw()
+    
+    time.sleep(3.0)
